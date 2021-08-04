@@ -83,7 +83,7 @@ def main():
     configuration_id = params.get('configuration_id')
     my_token_id = params.get('my_token_id')
     headers = {
-        'X-StorageApi-Token': params.get('X-StorageApi-Token'),
+        'X-StorageApi-Token': params.get('#X-StorageApi-Token'),
         'Content-Type': 'application/x-www-form-urlencoded'
     }
     url = params.get('url')
