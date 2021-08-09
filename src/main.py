@@ -6,6 +6,7 @@ Creates a new event trigger for a given configuration with the same tables as th
 import os
 import json
 from datetime import datetime
+import pytz
 
 import requests
 import pandas as pd
@@ -102,7 +103,7 @@ def main():
                                          tables=trigger_tables)
 
     output = del_triggers.append(created_trigger)
-    output['TIMESTAMP'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    output['TIMESTAMP'] = datetime.now(pytz.timezone('Europe/Prague')).strftime("%Y-%m-%d %H:%M:%S")
     output.to_csv(path, index=False)
 
 
