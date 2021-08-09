@@ -59,8 +59,10 @@ def create_new_trigger(configuration_id, url, headers, token_id, tables):
     column_names = ['CONFIGURATION_ID', 'EVENT', 'TRIGGER_ID', 'TRIGGER_INFO']
     created_trigger = pd.DataFrame(columns=column_names)
 
-    trigger_tables_values = '&tableIds%5B0%5D='.join(tables)
-    values = f'runWithTokenId={token_id}&component=orchestrator&configurationId={configuration_id}&coolDownPeriodMinutes=5&tableIds%5B1%5D={trigger_tables_values}'
+    trigger_tables_values = ''
+    for i in range(len(tables)):
+        trigger_tables_values += f'&tableIds%5B{i}%5D=' + tables[i]
+    values = f'runWithTokenId={token_id}&component=orchestrator&configurationId={configuration_id}&coolDownPeriodMinutes=5{trigger_tables_values}'
     response = requests.request("POST", url, headers=headers, data=values)
 
     item = json.loads(response.text)
