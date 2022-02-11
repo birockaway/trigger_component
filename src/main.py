@@ -82,6 +82,7 @@ def main():
     conf = docker.Config(datadir)
     params = conf.get_parameters()
     path = f'{os.getenv("KBC_DATADIR")}out/tables/results.csv'
+    path_in = f'{os.getenv("KBC_DATADIR")}in/tables/inputs.csv'
 
     configuration_id = params.get('configuration_id')
     my_token_id = params.get('my_token_id')
@@ -91,18 +92,36 @@ def main():
     }
     url = params.get('url')
 
+    mode = params.get('mode', 'reset').lower()  # create, delete, reset
+
     # Find latest trigger tables
-    trigger_tables = get_latest_trigger_tables(configuration_id=configuration_id, url=url, headers=headers)
+    if mode == 'create':
+        input = pd.read_csv(path_in)
+        last_trigger_info = \
+            input.sort_values(by='TIMESTAMP', ascending=False).reset_index().loc[
+                0, 'TRIGGER_INFO']
+        trigger_tables = []
+        for i in eval(last_trigger_info)['tables']:
+            trigger_tables.append(i['tableId'])
+    else:
+        trigger_tables = get_latest_trigger_tables(configuration_id=configuration_id, url=url, headers=headers)
 
     # Delete all triggers
-    del_triggers = delete_all_triggers(configuration_id=configuration_id, url=url, headers=headers)
+    if mode != 'create':
+        del_triggers = delete_all_triggers(configuration_id=configuration_id, url=url, headers=headers)
 
     # Create a mew trigger
-    created_trigger = create_new_trigger(configuration_id=configuration_id, url=url, headers=headers,
-                                         token_id=my_token_id,
-                                         tables=trigger_tables)
+    if mode != 'delete':
+        created_trigger = create_new_trigger(configuration_id=configuration_id, url=url, headers=headers,
+                                             token_id=my_token_id,
+                                             tables=trigger_tables)
 
-    output = del_triggers.append(created_trigger)
+    if mode == 'create':
+        output = created_trigger
+    elif mode == 'delete':
+        output = del_triggers
+    else:
+        output = del_triggers.append(created_trigger)
     output['TIMESTAMP'] = datetime.now(pytz.timezone('Europe/Prague')).strftime("%Y-%m-%d %H:%M:%S")
     output.to_csv(path, index=False)
 
